@@ -25,9 +25,11 @@ import org.platformlambda.core.models.EventEnvelope;
 import org.platformlambda.core.models.LambdaFunction;
 import org.platformlambda.core.system.AppStarter;
 import org.platformlambda.core.system.Platform;
+import org.platformlambda.core.util.ConfigReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,16 +48,19 @@ public class MainApp implements EntryPoint {
     private static final Logger log = LoggerFactory.getLogger(MainApp.class);
 
     public static final MongoDatabase getDBConnection(String DB_CONNECTION) {
-        Dotenv dotenv = Dotenv.configure()
-                .directory("./")
-                .load();
+        ConfigReader config = new ConfigReader();
+        try {
+            config.load("file:/tmp/mongodemo/demo.properties");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         // Create the reusable MongoDB connection
         String connectionString =
                 "mongodb+srv://"
-                + dotenv.get("MONGO_USER")
-                + ":" + dotenv.get("MONGO_PASSWORD")
-                + "@" + dotenv.get("MONGO_CLUSTER_ID");
+                + config.getProperty("MONGO_USER")
+                + ":" + config.getProperty("MONGO_PASSWORD")
+                + "@" + config.getProperty("MONGO_CLUSTER_ID") + "/";
 
         ServerApi serverApi = ServerApi.builder()
                 .version(ServerApiVersion.V1)

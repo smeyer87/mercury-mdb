@@ -31,11 +31,13 @@ import org.platformlambda.core.models.AsyncHttpRequest;
 import org.platformlambda.core.models.EventEnvelope;
 import org.platformlambda.core.models.TypedLambdaFunction;
 import org.platformlambda.core.system.Platform;
+import org.platformlambda.core.util.ConfigReader;
 import org.platformlambda.models.ObjectWithGenericType;
 import org.platformlambda.models.SamplePoJo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Map;
@@ -60,10 +62,14 @@ import org.json.simple.*;
 public class WriteMDBRecord implements TypedLambdaFunction<AsyncHttpRequest, Object> {
     @Override
     public Object handleEvent(Map<String, String> headers, AsyncHttpRequest input, int instance) throws Exception {
-        Dotenv dotenv = Dotenv.configure()
-                .directory("./")
-                .load();
-        MongoDatabase db = MainApp.getDBConnection(dotenv.get("DATA_DB"));
+
+        ConfigReader config = new ConfigReader();
+        try {
+            config.load("file:/tmp/mongodemo/demo.properties");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        MongoDatabase db = MainApp.getDBConnection(config.getProperty("DATA_DB"));
 
         String collection = "users";
         Map<String, String> data = input.getBody(Map.class);
